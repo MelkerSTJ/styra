@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
+/* === Färgvariabler === */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --moteva-blue: #2563eb;
+  --moteva-green: #22c55e;
+  --moteva-bg: #ffffff;
+  --moteva-surface: #f9fafb;
+  --moteva-text: #111827;
+  --moteva-subtext: #4b5563;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* 🌙 Dark mode */
+:root.dark {
+  --moteva-blue: #3b82f6;
+  --moteva-green: #4ade80;
+  --moteva-bg: #0b1220;
+  --moteva-surface: #111827;
+  --moteva-text: #f9fafb;
+  --moteva-subtext: #9ca3af;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* === Grundlayout === */
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  scroll-behavior: smooth;
+  background-color: var(--moteva-bg);
+  color: var(--moteva-text);
+  font-family: "Inter", sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
+
+a {
+  transition: color 0.25s ease, background-color 0.25s ease;
+}
+
+/* === Cards === */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.15);
+}
+
+/* === Hero glow === */
+.hero-glow {
+  position: relative;
+}
+
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  height: 300px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.25), transparent 70%);
+  filter: blur(80px);
+  z-index: -1;
+}
+
+html.dark a {
+  color: #fff !important;
+}
+
