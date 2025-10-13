@@ -8,12 +8,14 @@ datasource db {
 }
 
 model Meeting {
-  id          String   @id @default(cuid())
-  title       String
-  date        DateTime
-  agenda      String?
-  notes       String?
-  protocol    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  title     String
+  date      DateTime
+  agenda    String?
+  notes     String?
+  protocol  String?
+  summary   String?
+  status    String?  @default("draft")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,35 +1,66 @@
-import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { NextResponse } from "next/server"
+import OpenAI from "openai"
 
-const client = new OpenAI({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+})
 
 export async function POST(req: Request) {
   try {
-    const { title, date, notes } = await req.json();
+    const { title } = await req.json()
+
+    if (!title) {
+      return NextResponse.json(
+        { error: "Titel saknas" },
+        { status: 400 }
+      )
+    }
 
     const prompt = `
-Du är sekreterare i en svensk förening.
-Skriv en tydlig och kort dagordning för mötet "${title}" den ${date}.
-Använd klassisk svensk föreningsstruktur (Öppnande, Godkännande av dagordning, Ekonomi, Beslut, Övriga frågor, Avslutande).
-Anteckningar från skaparen: ${notes ?? "Inga särskilda anteckningar"}.
-    `;
+Du är en erfaren svensk föreningssekreterare. 
+Skapa en komplett dagordning baserad på mötets titel: "${title}".
 
-    const completion = await client.chat.completions.create({
+🎯 Regler:
+- Dagordningen ska vara mellan 7 och 12 punkter lång.
+- Alltid börja med "1. Mötets öppnande" och sluta med "Mötets avslutande".
+- Anpassa punkterna efter mötets titel och typ (ekonomi, underhåll, planering, etc).
+- Skriv på tydlig, korrekt svenska med enhetlig stil.
+- Inga förklaringar, bara ren numrerad text.
+
+Exempelstruktur:
+1. Mötets öppnande  
+2. Val av mötesordförande och sekreterare  
+3. Godkännande av dagordning  
+4. Föregående protokoll  
+5. Ekonomisk rapport / Projektrapport  
+6. Aktuella ärenden  
+7. Framtidsplanering / Förslag  
+8. Övriga frågor  
+9. Nästa möte  
+10. Mötets avslutande
+`
+
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "Du är expert på svenska föreningsmöten." },
+        {
+          role: "system",
+          content: "Du är en hjälpsam svensk sekreterare som skriver dagordningar för möten i bostadsrätts-, idrotts- och samfällighetsföreningar.",
+        },
         { role: "user", content: prompt },
       ],
-      temperature: 0.2,
-    });
+      temperature: 0.6, // lite kreativare men fortfarande korrekt
+      max_tokens: 800,
+    })
 
-    const content = completion.choices[0].message?.content ?? "Ingen respons från AI.";
+    const agenda = completion.choices[0].message?.content?.trim() || ""
 
-    return NextResponse.json({ agenda: content });
+    return NextResponse.json({ agenda })
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Något gick fel" }, { status: 500 });
+    console.error("Fel i /api/agenda:", error)
+    return NextResponse.json(
+      { error: "Kunde inte generera dagordning" },
+      { status: 500 }
+    )
   }
 }
