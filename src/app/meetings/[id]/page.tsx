@@ -14,9 +14,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-import EditableSection from "@/app/components/meeting/EdittableSection";
-import LivePreview from "@/app/components/meeting/LivePreview";
-import EndMeetingModal from "@/app/components/meeting/EndMeetingModal";
+import EditableSection from "@/app/components/meetings/EdittableSection";
+import LivePreview from "@/app/components/meetings/LivePreview";
+import EndMeetingModal from "@/app/components/meetings/EndMeetingModal";
 
 interface Meeting {
   id: string;

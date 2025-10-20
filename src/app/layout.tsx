@@ -13,13 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="sv" suppressHydrationWarning>
-      {/* Lägg ThemeProvider runt allt så att dark/light påverkar html-taggen */}
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="light"
-        enableSystem={false}
-      >
-        <body className="min-h-screen flex flex-col bg-gray-50 text-gray-900 dark:bg-[#0a0f1c] dark:text-gray-100 transition-colors duration-500 ease-in-out">
+      <body className="min-h-screen flex flex-col bg-gray-50 text-gray-900 dark:bg-[#0a0f1c] dark:text-gray-100 transition-colors duration-500 ease-in-out">
+        {/* ✅ ThemeProvider ska ligga här, runt allt i BODY – inte på HTML-nivå */}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {/* Navbar */}
           <Navbar />
 
@@ -30,9 +26,11 @@ export default function RootLayout({
 
           {/* Footer */}
           <Footer />
-        </body>
-        <Toaster richColors position="bottom-center" />
-      </ThemeProvider>
+
+          {/* Toaster för notiser */}
+          <Toaster richColors position="bottom-center" />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
