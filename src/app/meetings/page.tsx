@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import MeetingsHeader from "@/app/components/meeting/MeetingsHeader";
+import MeetingsHeader from "@/app/components/meetings/MeetingsHeader";
 import FilterBar from "@/app/components/meeting/FilterBar";
 import SearchInput from "@/app/components/meeting/SearchInput";
 import MeetingCard from "@/app/components/meeting/MeetingCard";
-import EmptyState from "@/app/components/meeting/EmptyState";
+import EmptyState from "@/app/components/meetings/EmptyState";
 
 type FilterKey = "ALL" | "UPCOMING" | "ENDED" | "NOPROTOCOL";
 

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { StepIndicator } from "@/app/components/meeting/StepIndicator"
+import { StepIndicator } from "@/app/components/meetings/StepIndicator"
 import { toast } from "sonner"
 import { Sparkles, Loader2, Plus, Calendar as CalendarIcon, Clock } from "lucide-react"
 
