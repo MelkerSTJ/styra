@@ -1,9 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Calendar, FileText, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import MeetingsHeader from "@/app/components/meeting/MeetingsHeader";
+import FilterBar from "@/app/components/meeting/FilterBar";
+import SearchInput from "@/app/components/meeting/SearchInput";
+import MeetingCard from "@/app/components/meeting/MeetingCard";
+import EmptyState from "@/app/components/meeting/EmptyState";
 
+type FilterKey = "ALL" | "UPCOMING" | "ENDED" | "NOPROTOCOL";
 
 interface Meeting {
   id: string;
@@ -11,25 +15,68 @@ interface Meeting {
   date: string;
   protocol: string | null;
   createdAt: string;
+  status?: string | null; // "avslutat" eller null
 }
 
 export default function MeetingsPage() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [hovered, setHovered] = useState(false);
-  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterKey>("ALL");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
+    let mounted = true;
     async function fetchMeetings() {
-      const res = await fetch("/api/meetings");
-      const data = await res.json();
-      setMeetings(data);
+      try {
+        const res = await fetch("/api/meetings");
+        const data = await res.json();
+        if (!mounted) return;
+        setMeetings(data);
+      } catch (e) {
+        // TODO: ev. toast
+      } finally {
+        if (mounted) setLoading(false);
+      }
     }
     fetchMeetings();
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  // Filter + sök
+  const filtered = useMemo(() => {
+    const today = new Date();
+    const normalizedSearch = search.trim().toLowerCase();
+
+    return meetings
+      .filter((m) => {
+        // sök
+        if (normalizedSearch.length) {
+          const hay = `${m.title} ${new Date(m.date).toLocaleDateString("sv-SE")}`.toLowerCase();
+          if (!hay.includes(normalizedSearch)) return false;
+        }
+
+        // filter
+        if (filter === "ALL") return true;
+
+        const dateObj = new Date(m.date);
+        const isUpcoming = m.status !== "avslutat" && dateObj >= new Date(today.toDateString());
+        const isEnded = m.status === "avslutat" || dateObj < new Date(today.toDateString());
+        const noProtocol = !m.protocol;
+
+        if (filter === "UPCOMING") return isUpcoming;
+        if (filter === "ENDED") return isEnded;
+        if (filter === "NOPROTOCOL") return noProtocol;
+
+        return true;
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [meetings, filter, search]);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* 🌈 Bakgrund */}
+      {/* Bakgrund */}
       <div
         className="absolute inset-0 transition-colors duration-700 
         bg-gradient-to-b from-[#f7f9fc] via-[#f8f8fb] to-[#eef1f5]
@@ -37,113 +84,54 @@ export default function MeetingsPage() {
       />
 
       {/* Innehåll */}
-      <div className="relative z-10 flex flex-col items-center justify-start pt-20 pb-24 px-6 max-w-6xl mx-auto">
-        {/* Titel */}
-        <div className="w-full flex flex-col sm:flex-row items-center justify-between mb-10">
-          <h1
-            className="text-3xl sm:text-4xl font-bold text-center sm:text-left
-            bg-gradient-to-r from-indigo-700 to-slate-600 dark:from-blue-400 dark:to-slate-300
-            text-transparent bg-clip-text tracking-tight"
-          >
-            Dina möten
-          </h1>
+      <div className="relative z-10 flex flex-col items-center justify-start pt-20 pb-24 px-6 max-w-6xl mx-auto w-full">
+        {/* Header med CTA */}
+        <MeetingsHeader title="Dina möten" />
+
+        {/* Filterbar + count i baren */}
+        <div className="w-full mt-6">
+          <FilterBar active={filter} onChange={setFilter} totalCount={filtered.length} />
         </div>
 
-        {/* Möteskort */}
+        {/* Sökfält */}
+        <div className="w-full mt-4">
+          <SearchInput value={search} onChange={setSearch} placeholder="Sök möte..." />
+        </div>
+
+        {/* Wrapper-kort */}
         <div
-          className="w-full p-10 rounded-3xl shadow-xl
-          bg-white/80 dark:bg-[#111827]/70
-          backdrop-blur-md border border-gray-200 dark:border-gray-700
-          transition-all duration-500"
+          className="w-full mt-8 p-8 md:p-10 rounded-3xl shadow-xl
+          bg-white/80 dark:bg-[#111827]/70 backdrop-blur-md
+          border border-gray-200 dark:border-gray-700 transition-all duration-500"
         >
-          {meetings.length === 0 ? (
-            <p className="text-center text-gray-600 dark:text-gray-300">
-              Inga möten skapade ännu.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {meetings.map((meeting, i) => (
+          {/* Loading skeleton */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              {Array.from({ length: 4 }).map((_, i) => (
                 <div
-                  key={meeting.id}
-                  onClick={() => router.push(`/meetings/${meeting.id}`)}
-                  className={`p-6 rounded-2xl border cursor-pointer
-                    bg-white dark:bg-[#1a1f2e] border-gray-200 dark:border-gray-700
-                    hover:shadow-lg hover:-translate-y-1 hover:border-indigo-400 
-                    dark:hover:border-blue-500 transition-all duration-300
-                    ${i === 0 ? "scale-[1.02]" : ""}`}
-                >
-                  <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                    {meeting.title}
-                  </h2>
-
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    <Calendar className="w-4 h-4 mr-2 opacity-70" />
-                    {new Date(meeting.date).toLocaleDateString("sv-SE", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </div>
-
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <FileText className="w-4 h-4 mr-2 opacity-70" />
-                    {meeting.protocol ? "Protokoll genererat" : "Protokoll saknas"}
-                  </div>
-                </div>
+                  key={i}
+                  className="h-32 rounded-2xl border border-gray-200 dark:border-gray-700
+                  bg-gray-100/60 dark:bg-slate-800/40 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              {filtered.map((m) => (
+                <MeetingCard
+                  key={m.id}
+                  id={m.id}
+                  title={m.title}
+                  date={m.date}
+                  hasProtocol={!!m.protocol}
+                  status={m.status || null}
+                />
               ))}
             </div>
           )}
         </div>
-      </div>
-
-      {/* ✨ Flytande knapp */}
-      <div
-        className="fixed bottom-8 right-8 z-50"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <button
-          onClick={() => router.push("/meetings/new")}
-          className={`flex items-center justify-center overflow-hidden
-            shadow-lg font-medium text-white
-            bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400
-            dark:shadow-[0_0_12px_rgba(30,64,175,0.6)]
-            transition-all duration-300 ease-in-out
-            ${hovered ? "w-52 rounded-full px-5" : "w-14 rounded-full"}
-            h-14 relative group`}
-        >
-          {/* Plus-ikon */}
-          <div
-            className={`flex items-center justify-center transition-all duration-500 ${
-              hovered ? "mr-3 scale-100" : "scale-100"
-            }`}
-          >
-            <Plus
-              className={`w-6 h-6 transition-all duration-500 
-                text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.7)]
-                ${hovered ? "opacity-100" : "opacity-100"}
-              `}
-            />
-          </div>
-
-          {/* Text */}
-          <span
-            className={`transition-all duration-300 text-sm font-medium whitespace-nowrap ${
-              hovered
-                ? "opacity-100 translate-x-0"
-                : "opacity-0 -translate-x-4 pointer-events-none"
-            }`}
-          >
-            Skapa nytt möte
-          </span>
-
-          {/* Inner glow-effekt */}
-          <span
-            className="absolute inset-0 rounded-full 
-            bg-gradient-to-r from-indigo-400/30 to-blue-400/30 
-            opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
-          ></span>
-        </button>
       </div>
     </div>
   );
