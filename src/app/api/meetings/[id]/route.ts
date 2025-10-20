@@ -1,16 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // GET /api/meetings/[id] – hämta specifikt möte
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
+
     const meeting = await prisma.meeting.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!meeting) {
@@ -28,46 +30,32 @@ export async function GET(
 }
 
 // PUT /api/meetings/[id] – uppdatera möte
-// PUT /api/meetings/[id] – uppdatera möte
-// PUT /api/meetings/[id] – uppdatera möte
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const data = await req.json();
-
-    // 💡 Typa upp de fält som får uppdateras
-    type UpdateMeetingData = {
-      title?: string;
-      date?: Date;
-      agenda?: string | null;
-      notes?: string | null;
-      protocol?: string | null;
-      status?: string | null;
-    };
-
-    const updateData: UpdateMeetingData = {};
-
-    if (data.title !== undefined) updateData.title = data.title;
-    if (data.date !== undefined) updateData.date = new Date(data.date);
-    if (data.agenda !== undefined) updateData.agenda = data.agenda;
-    if (data.notes !== undefined) updateData.notes = data.notes;
-    if (data.protocol !== undefined) updateData.protocol = data.protocol;
-    if (data.status !== undefined) updateData.status = data.status;
+    const { id } = await context.params;
+    const data = await request.json();
 
     const updated = await prisma.meeting.update({
-      where: { id: params.id },
-      data: updateData,
+      where: { id },
+      data: {
+        title: data.title,
+        date: new Date(data.date),
+        agenda: data.agenda,
+        notes: data.notes,
+        protocol: data.protocol,
+        status: data.status ?? undefined,
+      },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("❌ Fel vid PUT /api/meetings/[id]:", error);
+    console.error("Fel vid PUT /api/meetings/[id]:", error);
     return NextResponse.json(
       { error: "Kunde inte uppdatera mötet" },
       { status: 500 }
     );
   }
 }
-

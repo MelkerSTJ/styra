@@ -1,20 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { text } = await req.json();
+    const { text } = await request.json();
 
     const prompt = `
 Du är en svensk mötesassistent. Förbättra anteckningarna språkligt men ändra inte betydelsen.
 - Gör texten tydligare och mer formell.
 - Behåll punktlistor.
 - Gör inga tillägg eller påhitt.
-
 
 ${text}
     `;

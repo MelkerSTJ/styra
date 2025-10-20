@@ -1,19 +1,16 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import OpenAI from "openai"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { title } = await req.json()
+    const { title } = await request.json()
 
     if (!title) {
-      return NextResponse.json(
-        { error: "Titel saknas" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Titel saknas" }, { status: 400 })
     }
 
     const prompt = `
@@ -45,16 +42,16 @@ Exempelstruktur:
       messages: [
         {
           role: "system",
-          content: "Du är en hjälpsam svensk sekreterare som skriver dagordningar för möten i bostadsrätts-, idrotts- och samfällighetsföreningar.",
+          content:
+            "Du är en hjälpsam svensk sekreterare som skriver dagordningar för möten i bostadsrätts-, idrotts- och samfällighetsföreningar.",
         },
         { role: "user", content: prompt },
       ],
-      temperature: 0.6, // lite kreativare men fortfarande korrekt
+      temperature: 0.6,
       max_tokens: 800,
     })
 
     const agenda = completion.choices[0].message?.content?.trim() || ""
-
     return NextResponse.json({ agenda })
   } catch (error) {
     console.error("Fel i /api/agenda:", error)

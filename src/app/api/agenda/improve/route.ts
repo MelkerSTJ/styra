@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import OpenAI from "openai"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { agenda } = await req.json()
+    const { agenda } = await request.json()
 
     if (!agenda) {
       return NextResponse.json(
@@ -33,12 +33,13 @@ ${agenda}
       messages: [
         {
           role: "system",
-          content: "Du är en professionell svensk sekreterare som förbättrar formalia i mötesprotokoll och dagordningar.",
+          content:
+            "Du är en professionell svensk sekreterare som förbättrar formalia i mötesprotokoll och dagordningar.",
         },
         { role: "user", content: prompt },
       ],
       temperature: 0.5,
-      max_tokens: 900, // ökat utrymme
+      max_tokens: 900,
     })
 
     const improved = completion.choices[0].message?.content?.trim() || agenda

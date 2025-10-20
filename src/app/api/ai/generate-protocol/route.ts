@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { notes } = await req.json();
+    const { notes } = await request.json();
 
     const prompt = `
 Du är en svensk föreningssekreterare. Skapa ett tydligt och kort mötesprotokoll utifrån anteckningarna nedan.
@@ -22,7 +22,6 @@ Strukturera det som:
 §6 Mötets avslutning  
 
 Var kortfattad, formell och använd neutralt språk. Skriv på svenska.
-
 
 ${notes}
     `;

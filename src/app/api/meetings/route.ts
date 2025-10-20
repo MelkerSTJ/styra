@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // POST /api/meetings – skapa nytt möte
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { title, date, agenda, notes, protocol } = await req.json();
+    const { title, date, agenda, notes, protocol } = await request.json();
 
     if (!title || !date) {
       return NextResponse.json(
